@@ -4,8 +4,8 @@ import { parseBigNumber, BigNumber } from "./api/BigNumber";
 import { theory } from "./api/Theory";
 import { Utils } from "./api/Utils";
 
-var id = "fractional_integration";
-var name = "Fractional Integration";
+var id = "fractional_integration_no_beta";
+var name = "Fractional Integration NO Beta";
 var description = "The functions between a function and its derivative have many ways of being shown, this is one of them."+
                     "Fractional integration is a way to calculate what is between a function and its integral and is a smooth transition."+
                     "As such, as a fractional integral approaches 1, it should become the integral.";
@@ -38,7 +38,9 @@ var r = BigNumber.ZERO;
 
 var update_divisor = true;
 
-var q1, q2, t, k, m, n;
+var q1, t, m, n;
+var q2A, q2B, q2C, q2D;
+var kA, kB, kC;
 var intUnlock, kUnlock, q1Exp, UnlTerm, fxUpg, baseUpg;
 
 var popup = ui.createPopup({
@@ -76,39 +78,80 @@ var init = () => {
         q1.getInfo = (amount) => Utils.getMathTo(getInfo(q1.level), getInfo(q1.level + amount));
     }
 
-    //q2
+    //q2A
     {
         let getDesc = (level) => "q_2=2^{" + level+"}";
         let getInfo = (level) => "q_2=" + getQ2(level).toString(0);
-        q2 = theory.createUpgrade(2, currency, new CustomCost(
-            level => q2Costs[Math.min(2,fxUpg.level)].getCost(level) ,
-            (level,extra) => q2Costs[fxUpg.level].getSum(level,level+extra),
-            (level,vrho) => q2Costs[fxUpg.level].getMax(level,vrho)
-        ));
-        q2.getDescription = (amount) => Utils.getMath(getDesc(q2.level));
-        q2.getInfo = (amount) => Utils.getMathTo(getInfo(q2.level), getInfo(q2.level + amount));
+        q2A = theory.createUpgrade(2, currency, new ExponentialCost(1e7, Math.log2(5e3)));
+        q2A.getDescription = (amount) => Utils.getMath(getDesc(q2A.level));
+        q2A.getInfo = (amount) => Utils.getMathTo(getInfo(q2A.level), getInfo(q2A.level + amount));
     }
 
-    //K
+    //q2B
+    {
+        let getDesc = (level) => "q_2=2^{" + level+"}";
+        let getInfo = (level) => "q_2=" + getQ2(level).toString(0);
+        q2B = theory.createUpgrade(3, currency, new ExponentialCost(1e7, Math.log2(3e3)));
+        q2B.getDescription = (amount) => Utils.getMath(getDesc(q2B.level));
+        q2B.getInfo = (amount) => Utils.getMathTo(getInfo(q2B.level), getInfo(q2B.level + amount));
+    }
+
+    //q2C
+    {
+        let getDesc = (level) => "q_2=2^{" + level+"}";
+        let getInfo = (level) => "q_2=" + getQ2(level).toString(0);
+        q2C = theory.createUpgrade(4, currency, new ExponentialCost(1e-10, Math.log2(2.27e3)));
+        q2C.getDescription = (amount) => Utils.getMath(getDesc(q2C.level));
+        q2C.getInfo = (amount) => Utils.getMathTo(getInfo(q2C.level), getInfo(q2C.level + amount));
+    }
+
+    //q2D
+    {
+        let getDesc = (level) => "q_2=2^{" + level+"}";
+        let getInfo = (level) => "q_2=" + getQ2(level).toString(0);
+        q2D = theory.createUpgrade(5, currency,  new ExponentialCost(BigNumber.TEN.pow(95), Math.log2(1.08e3)));
+        q2D.getDescription = (amount) => Utils.getMath(getDesc(q2D.level));
+        q2D.getInfo = (amount) => Utils.getMathTo(getInfo(q2D.level), getInfo(q2D.level + amount));
+    }
+
+    //KA
     {
         let getDesc = (level) => "K= " + getK(level).toString(0);
         let getInfo = (level) => "K=" + getK(level).toString(0);
-        k = theory.createUpgrade(3, currency, new CustomCost(
-            level => KCosts[baseUpg.level].getCost(level),
-            (level,extra) => KCosts[baseUpg.level].getSum(level,level+extra),
-            (level,vrho) => KCosts[baseUpg.level].getMax(level,vrho)
-        ));
-        k.getDescription = (amount) => Utils.getMath(getDesc(k.level));
-        k.getInfo = (amount) => Utils.getMathTo(getInfo(k.level), getInfo(k.level + amount));
-        k.bought = (_) => update_divisor = true;
-        k.level = 1;
+        kA = theory.createUpgrade(6, currency, new ExponentialCost(1e2,Math.log2(10)));
+        kA.getDescription = (amount) => Utils.getMath(getDesc(kA.level));
+        kA.getInfo = (amount) => Utils.getMathTo(getInfo(kA.level), getInfo(kA.level + amount));
+        kA.bought = (_) => update_divisor = true;
+        kA.level = 1;
+    }
+
+    //KB
+    {
+        let getDesc = (level) => "K= " + getK(level).toString(0);
+        let getInfo = (level) => "K=" + getK(level).toString(0);
+        kB = theory.createUpgrade(7, currency, new ExponentialCost(1e-5,Math.log2(37)));
+        kB.getDescription = (amount) => Utils.getMath(getDesc(kB.level));
+        kB.getInfo = (amount) => Utils.getMathTo(getInfo(kB.level), getInfo(kB.level + amount));
+        kB.bought = (_) => update_divisor = true;
+        kB.level = 1;
+    }
+
+    //KC
+    {
+        let getDesc = (level) => "K= " + getK(level).toString(0);
+        let getInfo = (level) => "K=" + getK(level).toString(0);
+        kC = theory.createUpgrade(8, currency, new ExponentialCost(1e-10,Math.log2(95)));
+        kC.getDescription = (amount) => Utils.getMath(getDesc(kC.level));
+        kC.getInfo = (amount) => Utils.getMathTo(getInfo(kC.level), getInfo(kC.level + amount));
+        kC.bought = (_) => update_divisor = true;
+        kC.level = 1;
     }
 
     //M
     {
         let getDesc = (level) => "m= 1.5^{" + level + "}";
         let getInfo = (level) => "m=" + getM(level).toString(0);
-        m = theory.createUpgrade(4, currency, new ExponentialCost(1e6, Math.log2(4.44)));
+        m = theory.createUpgrade(9, currency, new ExponentialCost(1e6, Math.log2(4.44)));
         m.getDescription = (amount) => Utils.getMath(getDesc(m.level));
         m.getInfo = (amount) => Utils.getMathTo(getInfo(m.level), getInfo(m.level + amount));
     }
@@ -117,7 +160,7 @@ var init = () => {
     {
         let getDesc = (level) => "n= " + getN(level).toString(0);
         let getInfo = (level) => "n=" + getN(level).toString(0);
-        n = theory.createUpgrade(5, currency, new ExponentialCost(1e69, Math.log2(11)));
+        n = theory.createUpgrade(10, currency, new ExponentialCost(1e69, Math.log2(11)));
         n.getDescription = (amount) => Utils.getMath(getDesc(n.level));
         n.getInfo = (amount) => Utils.getMathTo(getInfo(n.level), getInfo(n.level + amount));
         n.level = 1;
@@ -140,7 +183,6 @@ var init = () => {
             popup.show();
         }
         perm1.maxLevel = 3;
-    
     }
 
     {
@@ -155,7 +197,7 @@ var init = () => {
     /////////////////////
     // Checkpoint Upgrades
     theory.setMilestoneCost(new CustomCost(total => BigNumber.from(getMilCustomCost(total))));
-
+    
     {
         intUnlock =  theory.createMilestoneUpgrade(0,1);
         intUnlock.getDescription = (_) => {return "$\\text{Unlock Fractional Integral}$";}
@@ -170,7 +212,6 @@ var init = () => {
         kUnlock.getInfo = (_) => {return Localization.getUpgradeAddTermInfo("k");}
         kUnlock.boughtOrRefunded = (_) => {updateAvailability();theory.invalidateSecondaryEquation();}
         kUnlock.canBeRefunded = (_) => q1Exp.level == 0 && UnlTerm.level == 0 && fxUpg.level == 0 && baseUpg.level == 0;
-
     }
 
     {
@@ -217,7 +258,11 @@ var init = () => {
 
         };
         fxUpg.boughtOrRefunded = (_) => {
-            q2.level = 0;
+            q2A.level = 0;
+            q2B.level = 0;
+            q2C.level = 0;
+            q2D.level = 0;
+            
             q = BigNumber.ZERO;          
             theory.invalidatePrimaryEquation();
             theory.invalidateSecondaryEquation();
@@ -241,7 +286,9 @@ var init = () => {
         } ;
         baseUpg.boughtOrRefunded = (_) => {
             lambda_base = BigNumber.from(2 + baseUpg.level);
-            k.level = 1;
+            kA.level = 1;
+            kB.level = 1;
+            kC.level = 1;
             update_divisor = true;
             theory.invalidateSecondaryEquation();
             theory.invalidateTertiaryEquation();
@@ -324,18 +371,27 @@ var updateAvailability = () => {
     fxUpg.maxLevel = 0 + perm1.level;
     baseUpg.maxLevel = 0 + perm2.level;
 
-    k.isAvailable = kUnlock.level == 1;
+    q2A.isAvailable = fxUpg.level == 0;
+    q2B.isAvailable = fxUpg.level == 1;
+    q2C.isAvailable = fxUpg.level == 2;
+    q2D.isAvailable = fxUpg.level == 3;
+
+    kA.isAvailable = baseUpg.level == 0 && kUnlock.level == 1;
+    kB.isAvailable = baseUpg.level == 1 && kUnlock.level == 1;
+    kC.isAvailable = baseUpg.level == 2 && kUnlock.level == 1;
+
     m.isAvailable = UnlTerm.level > 0;
     n.isAvailable = UnlTerm.level > 1;
+
 }
 
 var tick = (elapsedTime, multiplier) => {
     let dt = BigNumber.from(elapsedTime*multiplier); 
     let bonus = theory.publicationMultiplier; 
     let vq1 = getQ1(q1.level).pow(getQ1Exp(q1Exp.level));
-    let vq2 = getQ2(q2.level);
+    let vq2 = getQ2(Math.max(q2A.level,q2B.level,q2C.level,q2D.level));
     let vt = getT(t.level);
-    let vk = getK(k.level);
+    let vk = getK(Math.max(kA.level,kB.level,kC.level));
     let vm = (UnlTerm.level > 0) ? getM(m.level) : 1;
     let vn = (UnlTerm.level > 1) ? getN(n.level) : 1;
 
@@ -351,13 +407,12 @@ var tick = (elapsedTime, multiplier) => {
     if (q1.level > 0) t_cumulative += vt * dt;
     q += vq1 * vq2 * dt;
     if (q1.level > 0) r += vapp * dt;
-
+    
     if(intUnlock.level == 0){
         rho_dot = vm * vn * t_cumulative * r * (q/BigNumber.PI).pow(BigNumber.ONE/BigNumber.PI);
     }else{
         rho_dot = vm * vn * t_cumulative * norm_int(q/(fxUpg.level < 3 ? BigNumber.PI : BigNumber.ONE)).pow(BigNumber.ONE/BigNumber.PI) * r;
     }
-    
     currency.value += bonus * rho_dot * dt;
 
     theory.invalidateTertiaryEquation();
@@ -426,7 +481,9 @@ var postPublish = () => {
     q = BigNumber.ZERO;
     r = BigNumber.ZERO;
     update_divisor = true;
-    k.level = 1;
+    kA.level = 1;
+    kB.level = 1;
+    kC.level = 1;
     n.level = 1;
     updateAvailability();
 }
@@ -453,7 +510,7 @@ var getPrimaryEquation = () => {
 }
 
 var getSecondaryEquation = () => {
-    theory.secondaryEquationHeight = 90;   
+    theory.secondaryEquationHeight = 90;
     theory.secondaryEquationScale = 1.2;
     let result = "";
     result += "f(x) = ";
@@ -479,8 +536,8 @@ var getTertiaryEquation = () => {
     let result = "";
     result += "\\begin{matrix}";
     result += "& 1-\\lambda =";
-    if(getK(k.level) < 8 && 1/lambda_base.pow(getK(k.level))>0.001){
-        result += (1/lambda_base.pow(getK(k.level))).toString(4);
+    if(getK(Math.max(kA.level,kB.level,kC.level)) < 8 && 1/lambda_base.pow(getK(Math.max(kA.level,kB.level,kC.level)))>0.001){
+        result += (1/lambda_base.pow(getK(Math.max(kA.level,kB.level,kC.level)))).toString(4);
     }else{
         result += lambda_man.toString(3)+"e"+lambda_exp.toString();
     }
@@ -535,7 +592,7 @@ var fx_latex = () => {
     }
 }
 
-var getPublicationMultiplier = (tau) => tau.isZero ? BigNumber.ONE : BigNumber.from(1.5) * tau.pow(0.68);
+var getPublicationMultiplier = (tau) => tau.isZero ? BigNumber.ONE : tau.pow(0.68) * BigNumber.from(1.5);
 var getPublicationMultiplierFormula = (symbol) => "1.5" + symbol + "^{0.68}";
 var getTau = () => currency.value.pow(BigNumber.from(0.1));
 var getCurrencyFromTau = (tau) => [tau.max(BigNumber.ONE).pow(10), currency.symbol];
